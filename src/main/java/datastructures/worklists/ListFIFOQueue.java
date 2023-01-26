@@ -10,46 +10,57 @@ import java.util.NoSuchElementException;
  * for method specifications.
  */
 public class ListFIFOQueue<E> extends FIFOWorkList<E> {
-
-    public ListFIFOQueue() {
-        throw new NotYetImplementedException();
-    }
+    private ListNode<E> head;
+    private ListNode<E> tail;
+    private int size;
 
     @Override
     public void add(E work) {
-        throw new NotYetImplementedException();
+        if (head == null) {
+            head = new ListNode<>(work, null);
+            tail = head;
+        } else {
+            tail.next = new ListNode<>(work, null);
+            tail = tail.next;
+        }
+        size++;
     }
 
     @Override
     public E peek() {
-        throw new NotYetImplementedException();
+        if (hasWork()) {
+            return head.data;
+        }
+        throw new NoSuchElementException();
     }
 
     @Override
     public E next() {
-        throw new NotYetImplementedException();
+        E work = peek();
+        head = head.next;
+        size--;
+        return work;
     }
 
     @Override
     public int size() {
-        throw new NotYetImplementedException();
+        return size;
     }
 
     @Override
     public void clear() {
-        throw new NotYetImplementedException();
+        head = null;
+        tail = null;
+        size = 0;
     }
 
-    private class ListNode {
-
+    private class ListNode<E> {
         public E data;
-        public ListNode next;
-
-        public ListNode(E data) {
+        public ListNode<E> next;
+        public ListNode(E data, ListNode<E> next) {
             this.data = data;
-            next = null;
+            this.next = next;
         }
-
     }
 
 }
