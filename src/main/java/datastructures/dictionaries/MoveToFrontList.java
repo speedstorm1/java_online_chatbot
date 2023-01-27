@@ -10,6 +10,7 @@ import datastructures.worklists.ArrayStack;
 import datastructures.worklists.ListFIFOQueue;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * 1. The list is typically not sorted.
@@ -31,10 +32,22 @@ public class MoveToFrontList<K, V> extends DeletelessDictionary<K, V> {
         if (value == null) {
             throw new IllegalArgumentException();
         }
-        if (findPrev(key) == null) { // list doesn't contain this key, so we just insert new node @ front
-            root = new ListNode(key, value, root.next);
-        }
         V oldVal = find(key);
+        if (root == null) {
+            root = new ListNode<>(key, value, null);
+        } else if (root.key.equals(key)) {
+            oldVal = (V) root.data;
+            root.data = value;
+            return oldVal;
+        } else if (findPrev(key) == null) { // list doesn't contain this key, so we just insert new node @ front
+            root = new ListNode(key, value, root);
+        } else {
+            ListNode prev = findPrev(key);
+            ListNode newRoot = prev.next;
+            prev.next = prev.next.next;
+            newRoot.next = root;
+            root = newRoot;
+        }
         root.data = value;
         size++;
         return oldVal;
@@ -66,14 +79,10 @@ public class MoveToFrontList<K, V> extends DeletelessDictionary<K, V> {
             return (V) root.data;
         }
         ListNode prev = findPrev(key);
-        ListNode newRoot = prev.next;
         if (prev == null) {
             return null;
         }
-        prev.next = prev.next.next;
-        newRoot.next = root;
-        root = newRoot;
-        return (V) root.data;
+        return (V) prev.next.data;
     }
 
     @Override
@@ -86,24 +95,25 @@ public class MoveToFrontList<K, V> extends DeletelessDictionary<K, V> {
 
     private class FLIterator extends SimpleIterator<Item<K, V>> {
         private MoveToFrontList.ListNode current;
-      //  private final WorkList<BinarySearchTree.BSTNode> nodes;
-
         public FLIterator() {
-            if (root != null) {
+        //    if (root != null) {
                 this.current = root;
-            }
-//            this.nodes = new ArrayStack<BinarySearchTree.BSTNode>();
+          //  }
         }
 
         @Override
         public boolean hasNext() {
-            return this.current != null;
+            return current != null;
         }
 
         @Override
         public Item<K, V> next() {
+            if (current == null) {
+                throw new NoSuchElementException();
+            }
+            Item result = new Item(current.key, current.data);
             current = current.next;
-            return new Item(current.key, current.data);
+            return result;
         }
     }
 
@@ -118,3 +128,33 @@ public class MoveToFrontList<K, V> extends DeletelessDictionary<K, V> {
         }
     }
 }
+
+/*
+*  private class FLIterator extends SimpleIterator<Item<K, V>> {
+        private final WorkList<MoveToFrontList.ListNode> nodes;
+        private MoveToFrontList.ListNode current;
+
+        public FLIterator() {
+            if (root != null) {
+                this.current = root;
+            }
+            this.nodes = new ArrayStack<>();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return this.current != null || this.nodes.hasWork();
+        }
+
+        @Override
+        public Item<K, V> next() {
+            while (this.current != null) {
+                this.nodes.add(current);
+                this.current = current.next;
+            }
+            current = nodes.next();
+            Item<K, V> value = new Item(current.key, current.data);
+            return value;
+        }
+    }
+* */
