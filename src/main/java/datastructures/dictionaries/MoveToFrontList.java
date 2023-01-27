@@ -35,12 +35,14 @@ public class MoveToFrontList<K, V> extends DeletelessDictionary<K, V> {
         V oldVal = find(key);
         if (root == null) {
             root = new ListNode<>(key, value, null);
+            size++;
         } else if (root.key.equals(key)) {
             oldVal = (V) root.data;
             root.data = value;
             return oldVal;
         } else if (findPrev(key) == null) { // list doesn't contain this key, so we just insert new node @ front
             root = new ListNode(key, value, root);
+            size++;
         } else {
             ListNode prev = findPrev(key);
             ListNode newRoot = prev.next;
@@ -49,7 +51,6 @@ public class MoveToFrontList<K, V> extends DeletelessDictionary<K, V> {
             root = newRoot;
         }
         root.data = value;
-        size++;
         return oldVal;
     }
 
