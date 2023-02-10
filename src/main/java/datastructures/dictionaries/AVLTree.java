@@ -34,28 +34,28 @@ import java.lang.reflect.Array;
 public class AVLTree<K extends Comparable<? super K>, V> extends BinarySearchTree<K, V> {
     // TODO: Implement me!
 
-    private AVLNode findHelper(K key, V value, AVLNode currentRoot) {
+
+    // given a root node and a key, it updates the tree with the key, performing
+    // all the necessary rotations and then returns the root
+    private AVLNode findHelper(K key, AVLNode currentRoot) {
         if (currentRoot == null) {
             return new AVLNode(key, null, 0);
         }
-        V oldValue = null;
         int compare = key.compareTo(currentRoot.key);
         if (compare < 0) {
-            currentRoot.children[0] = findHelper(key, value, (AVLNode) currentRoot.children[0]);
+            currentRoot.children[0] = findHelper(key, (AVLNode) currentRoot.children[0]);
         } else if (compare > 0) {
-            currentRoot.children[1] = findHelper(key, value, (AVLNode) currentRoot.children[1]);
-        } else {
+            currentRoot.children[1] = findHelper(key, (AVLNode) currentRoot.children[1]);
         }
-        // else you found the node and just update the value
+        // else you found the node and just update the value and balance the tree
         return balance(currentRoot);
-
     }
 
+    // avl balances the modified tree
     private AVLNode balance(AVLNode currentRoot) {
         if (currentRoot == null) {
             return null;
         }
-
         if (height(currentRoot.getLeft()) - height(currentRoot.getRight()) > 1) {
             if (height(currentRoot.getLeft().getLeft()) - height(currentRoot.getLeft().getRight()) >= 0) {
                 currentRoot = rotateLeftLeft(currentRoot);
@@ -73,6 +73,7 @@ public class AVLTree<K extends Comparable<? super K>, V> extends BinarySearchTre
         return currentRoot;
     }
 
+    // case 1 (left-left) of avl rotation
     private AVLNode rotateLeftLeft(AVLNode currentRoot) {
         AVLNode newRoot = (AVLNode) currentRoot.children[0];
         currentRoot.children[0] = newRoot.children[1];
@@ -82,18 +83,21 @@ public class AVLTree<K extends Comparable<? super K>, V> extends BinarySearchTre
         return newRoot;
     }
 
+    // case 2 (left-right) of avl rotation
     private AVLNode rotateLeftRight(AVLNode currentRoot) {
         currentRoot.children[0] = rotateRightRight((AVLNode) currentRoot.children[0]);
         currentRoot = rotateLeftLeft(currentRoot);
         return currentRoot;
     }
 
+    // case 3 (right-left) of avl rotation
     private AVLNode rotateRightLeft(AVLNode currentRoot) {
         currentRoot.children[1] = rotateLeftLeft((AVLNode) currentRoot.children[1]);
         currentRoot = rotateRightRight(currentRoot);
         return currentRoot;
     }
 
+    // case 4 (right-right) of avl rotation
     private AVLNode rotateRightRight(AVLNode currentRoot) {
         AVLNode newRoot = (AVLNode) currentRoot.children[1];
         currentRoot.children[1] = newRoot.children[0];
@@ -103,87 +107,39 @@ public class AVLTree<K extends Comparable<? super K>, V> extends BinarySearchTre
         return newRoot;
     }
 
+
+    // Returns the newly inserted node of the given key and value
+    // with all necessary avl tree adjustments made
     @Override
     protected BinarySearchTree<K, V>.BSTNode find(K key, V value) {
-        if (value == null) {
-            AVLNode current = (AVLNode) root;
-            int child = -1;
-            while (current != null) {
-                int direction = Integer.signum(key.compareTo(current.key));
-                // We found the key!
-                if (direction == 0) {
-                    return current;
-                }
-                else {
-                    // direction + 1 = {0, 2} -> {0, 1}
-                    child = Integer.signum(direction + 1);
-                    current = (AVLNode) current.children[child];
-                }
-            }
+        if (value != null) {
+            root = findHelper(key, (AVLNode) root);
         }
-        root = findHelper(key, value, (AVLNode) root);
         // updated tree, now must find the actual node
         AVLNode current = (AVLNode) root;
-        AVLNode prev = null;
         int child = -1;
         while (current != null) {
             int direction = Integer.signum(key.compareTo(current.key));
-            // We found the key!
+            // We found the key
             if (direction == 0) {
                 return current;
             }
             else {
                 // direction + 1 = {0, 2} -> {0, 1}
                 child = Integer.signum(direction + 1);
-                prev = current;
                 current = (AVLNode) current.children[child];
             }
         }
         return current;
     }
 
-
-
-//    private AVLNode rotateRight(AVLNode node) {
-//        AVLNode temp = node.getRight();
-//        node.children[1] = temp.getLeft();
-//        temp.children[0] = node;
-////        node.height = Math.max(node.getRight().height, node.getLeft().height) + 1;
-//        node.height = getMaxHeight(node);
-//        temp.height = getMaxHeight(temp);
-//        return temp;
-//    }
-
-    private int getMaxHeight(AVLNode node) {
-        int rightHeight = -1;
-        int leftHeight = -1;
-        if (node.getRight() != null) {
-            rightHeight = node.getRight().height;
-        }
-        if (node.getLeft() != null) {
-            leftHeight = node.getLeft().height;
-        }
-        return (Math.max(leftHeight, rightHeight) + 1);
-    }
-
-    private void rotateLeft(AVLNode node) {
-        AVLNode temp = node.getLeft();
-        node.children[0] = temp.getRight();
-        temp.children[1] = node;
-        node.height = Math.max(node.getRight().height, node.getLeft().height) + 1;
-        temp.height = Math.max(temp.getRight().height, temp.getLeft().height) + 1;
-        node = temp;
-    }
-
-
-
     @Override
     public V insert(K key, V value) {
         if (key == null || value == null) {
             throw new IllegalArgumentException();
         }
-        // does this key exist?
-        if (find(key) != null) {
+
+        if (find(key) != null) { // does this key exist?
             AVLNode result = (AVLNode) find(key, null);
             V oldValue = result.value;
             result.value = value;
@@ -193,6 +149,7 @@ public class AVLTree<K extends Comparable<? super K>, V> extends BinarySearchTre
         AVLNode current = (AVLNode) find(key, value);
         V oldValue = current.value;
         current.value = value;
+        this.size++;
         return oldValue;
     }
 
@@ -210,7 +167,6 @@ public class AVLTree<K extends Comparable<? super K>, V> extends BinarySearchTre
 
     
     public class AVLNode extends BSTNode {
-        // public BinarySearchTree.BSTNode[] children; // The children of this node. - inherited
         private int height;
 
         /**
@@ -239,122 +195,5 @@ public class AVLTree<K extends Comparable<? super K>, V> extends BinarySearchTre
         private AVLNode getRight() {
             return ((AVLNode) this.children[1]);
         }
-
-        private void rotateRight() {
-            AVLNode temp = this.getRight();
-            this.children[1] = temp.getLeft();
-            temp.children[0] = this;
-//        node.height = Math.max(node.getRight().height, node.getLeft().height) + 1;
-            this.height = getMaxHeight(this);
-            temp.height = getMaxHeight(temp);
-        }
-
-        private void rotateLeft() {
-            AVLNode temp = this.getLeft();
-            this.children[0] = temp.getRight();
-            temp.children[1] = this;
-//        node.height = Math.max(node.getRight().height, node.getLeft().height) + 1;
-            this.height = getMaxHeight(this);
-            temp.height = getMaxHeight(temp);
-        }
     }
-
-    public boolean verifyAVL(AVLNode root) {
-        /* TODO: Edit this with your code */
-        // throw new IllegalStateException();
-        K min = getMin(root);
-        K max = getMax(root);
-        System.out.println("new tree");
-        inOrder(root);
-//        System.out.println((int) (int) root.key);
-        System.out.println("BST Verification: " + verifyBST(root, getMin(root), getMax(root)));
-        System.out.println("Height Verification: " + verifyHeight(root));
-        System.out.println("Balance Verification:" + verifyBalanced(root));
-        return (verifyBST(root, getMin(root), getMax(root)) && verifyHeight(root) && verifyBalanced(root));
-    }
-
-    private K getMin(AVLNode root) {
-        if (root == null) {
-            return null;
-        }
-        K min = root.key;
-        while (root != null) {
-            if (min.compareTo(root.key) > 0) {
-                min = root.key;
-            }
-            root = root.getLeft();
-        }
-        return min;
-    }
-
-    private K getMax(AVLNode root) {
-        if (root == null) {
-            return null;
-        }
-        K max = root.key;
-        while (root != null) {
-            if (max.compareTo(root.key) < 0) {
-                max = root.key;
-            }
-            root = root.getRight();
-        }
-        return max;
-    }
-
-
-    private void inOrder(AVLNode root) {
-        if (root != null) {
-            inOrder(root.getLeft());
-            System.out.println(root.key);
-            inOrder(root.getRight());
-        }
-    }
-
-    private boolean verifyHeight(AVLNode root) {
-        if (root == null) {
-            return true;
-        }
-        if (root.height == 0) {
-            return (root.getLeft() == null && root.getRight() == null);
-        }
-        if (root.getLeft() == null) {
-            return (root.getRight().height + 1 == root.height && verifyHeight(root.getRight()));
-        }
-        if (root.getRight() == null) {
-            return (root.getLeft().height + 1 == root.height && verifyHeight(root.getLeft()));
-        }
-        return (Math.max(root.getLeft().height, root.getRight().height) + 1 == root.height && verifyHeight(root.getLeft())
-                && verifyHeight(root.getRight()));
-    }
-
-    private boolean verifyBalanced(AVLNode root) {
-        if (root == null) {
-            return true;
-        }
-        if (root.getLeft() == null && root.getRight() == null) {
-            return true;
-        }
-        if (root.getLeft() == null) {
-            return (root.getRight().height == 0);
-        }
-        if (root.getRight() == null) {
-            return (root.getLeft().height == 0);
-        }
-        return (Math.abs(root.getRight().height - root.getLeft().height) <= 1 &&
-                verifyBalanced(root.getRight()) && verifyBalanced(root.getLeft()));
-    }
-    private boolean verifyBST(AVLNode root, K min, K max) {
-        if (root == null) {
-            return true;
-        }
-        if (root.key.compareTo(min) < 0) {
-            return false;
-        }
-        if (root.key.compareTo(max) > 0) {
-            return false;
-        }
-        return (verifyBST(root.getLeft(), min, root.key) && verifyBST(root.getRight(), root.key, max));
-    }
-
-
 }
