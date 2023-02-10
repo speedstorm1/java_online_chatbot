@@ -36,16 +36,19 @@ public class AVLTree<K extends Comparable<? super K>, V> extends BinarySearchTre
 
     private AVLNode findHelper(K key, V value, AVLNode currentRoot) {
         if (currentRoot == null) {
-            return new AVLNode(key, value, 0);
+            return new AVLNode(key, null, 0);
         }
+        V oldValue = null;
         int compare = key.compareTo(currentRoot.key);
         if (compare < 0) {
             currentRoot.children[0] = findHelper(key, value, (AVLNode) currentRoot.children[0]);
         } else if (compare > 0) {
             currentRoot.children[1] = findHelper(key, value, (AVLNode) currentRoot.children[1]);
+        } else {
         }
         // else you found the node and just update the value
         return balance(currentRoot);
+
     }
 
     private AVLNode balance(AVLNode currentRoot) {
@@ -55,145 +58,101 @@ public class AVLTree<K extends Comparable<? super K>, V> extends BinarySearchTre
 
         if (height(currentRoot.getLeft()) - height(currentRoot.getRight()) > 1) {
             if (height(currentRoot.getLeft().getLeft()) - height(currentRoot.getLeft().getRight()) >= 0) {
-                //  left rotation (case 1)
+                currentRoot = rotateLeftLeft(currentRoot);
             } else {
-                // left right rotation (case 2)
+                currentRoot = rotateLeftRight(currentRoot);
             }
         } else if (height(currentRoot.getLeft()) - height(currentRoot.getRight()) < -1) {
             if (height(currentRoot.getRight().getRight()) - height(currentRoot.getRight().getLeft()) >= 0) {
-                //  right rotation (case 4)
+                currentRoot = rotateRightRight(currentRoot);
             } else {
-                //  right left rotation (case 3)
+                currentRoot = rotateRightLeft(currentRoot);
             }
         }
-        currentRoot.height = 0;
-        return null;
+        currentRoot.height = Math.max(height(currentRoot.getLeft()), height(currentRoot.getRight())) + 1;
+        return currentRoot;
+    }
+
+    private AVLNode rotateLeftLeft(AVLNode currentRoot) {
+        AVLNode newRoot = (AVLNode) currentRoot.children[0];
+        currentRoot.children[0] = newRoot.children[1];
+        newRoot.children[1] = currentRoot;
+        currentRoot.height = Math.max(height(currentRoot.getLeft()), height(currentRoot.getRight())) + 1;
+        newRoot.height = Math.max(height(newRoot.getLeft()), height(currentRoot)) + 1;
+        return newRoot;
+    }
+
+    private AVLNode rotateLeftRight(AVLNode currentRoot) {
+        currentRoot.children[0] = rotateRightRight((AVLNode) currentRoot.children[0]);
+        currentRoot = rotateLeftLeft(currentRoot);
+        return currentRoot;
+    }
+
+    private AVLNode rotateRightLeft(AVLNode currentRoot) {
+        currentRoot.children[1] = rotateLeftLeft((AVLNode) currentRoot.children[1]);
+        currentRoot = rotateRightRight(currentRoot);
+        return currentRoot;
+    }
+
+    private AVLNode rotateRightRight(AVLNode currentRoot) {
+        AVLNode newRoot = (AVLNode) currentRoot.children[1];
+        currentRoot.children[1] = newRoot.children[0];
+        newRoot.children[0] = currentRoot;
+        currentRoot.height = Math.max(height(currentRoot.getLeft()), height(currentRoot.getRight())) + 1;
+        newRoot.height = Math.max(newRoot.getRight().height, currentRoot.height) + 1;
+        return newRoot;
     }
 
     @Override
     protected BinarySearchTree<K, V>.BSTNode find(K key, V value) {
+        if (value == null) {
+            AVLNode current = (AVLNode) root;
+            int child = -1;
+            while (current != null) {
+                int direction = Integer.signum(key.compareTo(current.key));
+                // We found the key!
+                if (direction == 0) {
+                    return current;
+                }
+                else {
+                    // direction + 1 = {0, 2} -> {0, 1}
+                    child = Integer.signum(direction + 1);
+                    current = (AVLNode) current.children[child];
+                }
+            }
+        }
+        root = findHelper(key, value, (AVLNode) root);
+        // updated tree, now must find the actual node
+        AVLNode current = (AVLNode) root;
         AVLNode prev = null;
-        AVLNode current = (AVLNode) this.root;
-        WorkList<AVLNode> path = new ArrayStack<>(); // the path of nodes to get to the point
-        WorkList<AVLNode> pathDelete = new ArrayStack<>(); // the path of nodes to get to the point
-        WorkList<Integer> decisions = new ArrayStack<>(); // the sequence of moves (left: -1 or right: 1)
-
-        int direction = -1;
-
+        int child = -1;
         while (current != null) {
-            direction = Integer.signum(key.compareTo(current.key));
-
-            // Node already exists in our tree, and we don't need to rotate
+            int direction = Integer.signum(key.compareTo(current.key));
+            // We found the key!
             if (direction == 0) {
                 return current;
             }
             else {
+                // direction + 1 = {0, 2} -> {0, 1}
+                child = Integer.signum(direction + 1);
                 prev = current;
-                if (direction == -1) {
-                    current = current.getLeft();
-                } else {
-                    current = current.getRight();
-                }
-                decisions.add(direction);
-                path.add(prev);
-                pathDelete.add(prev);
-                //System.out.println(path);
+                current = (AVLNode) current.children[child];
             }
         }
-
-        // If value is not null, we need to actually add in the new value
-        if (value != null) {
-            this.size++;
-            if (this.root == null) { // in this case, we are all good
-                this.root = new AVLNode(key, null, 0);
-                return this.root;
-            }
-
-            // initialize our new AVL Node - height will change later
-            current = new AVLNode(key, null, 0);
-            prev.children[(direction + 1) / 2] = current;
-            // update all the ancestor heights by 1
-            for (AVLNode node : pathDelete) {
-                node.height = node.height + 1;
-            }
-
-            // now we check for imbalances
-            int numMoves = path.size();
-//            System.out.println(numMoves);
-
-            for (int i = 0; i < numMoves - 1; i++) {
-                prev = path.next();
-                AVLNode grandparent = path.peek();
-                int direction2 = decisions.next();
-                int direction1 = decisions.peek();
-                // first check if the grandparent has any null right / left sides
-                if (grandparent.getLeft() == null || grandparent.getRight() == null) {
-                    System.out.println("hit null");
-                    System.out.println("d2: " + direction2 + " d1: " + direction1);
-                    if (grandparent.getLeft() == null) {
-                        if (direction2 == -1) {
-                            rotateLeft(((AVLNode) grandparent).getRight());
-                            grandparent = rotateRight((AVLNode) grandparent);
-                        } else {
-                            grandparent.rotateRight();
-                        }
-                    } else {
-                        if (direction2 == -1) {
-                            rotateLeft(grandparent);
-                        } else {
-                            grandparent = rotateRight(((AVLNode) grandparent).getLeft());
-                            rotateLeft((AVLNode) grandparent);
-                        }
-                    }
-                    break;
-                }
-                System.out.println("GP Height" + grandparent.height);
-                if (Math.abs(grandparent.getLeft().height - grandparent.getRight().height) > 1) { // imbalance @ GP
-                    // determine cases
-                    System.out.println(i);
-
-                    if (direction1 == -1) { // first move was left
-                        if (direction2 == -1) { // second move was left
-                            // left-left
-                            rotateLeft(grandparent);
-                        } else {
-                            // left-right
-                            grandparent = rotateRight(((AVLNode) grandparent).getLeft());
-                            rotateLeft((AVLNode) grandparent);
-                        }
-                    } else { // first move was a right
-                        if (direction2 == -1) { // second move was left
-                            // right-left
-                            rotateLeft(((AVLNode) grandparent).getRight());
-                            grandparent = rotateRight((AVLNode) grandparent);
-                        } else {
-                            // right-right
-                            grandparent = rotateRight(grandparent);
-                        }
-                    }
-                    break;
-                }
-            //    decisions.next();
-            }
-
-
-        }
-        //  verifyAVL((AVLNode)root);
-//        System.out.println();
         return current;
     }
 
 
 
-    private AVLNode rotateRight(AVLNode node) {
-        AVLNode temp = node.getRight();
-        node.children[1] = temp.getLeft();
-        temp.children[0] = node;
-//        node.height = Math.max(node.getRight().height, node.getLeft().height) + 1;
-        node.height = getMaxHeight(node);
-        temp.height = getMaxHeight(temp);
-        return temp;
-    }
+//    private AVLNode rotateRight(AVLNode node) {
+//        AVLNode temp = node.getRight();
+//        node.children[1] = temp.getLeft();
+//        temp.children[0] = node;
+////        node.height = Math.max(node.getRight().height, node.getLeft().height) + 1;
+//        node.height = getMaxHeight(node);
+//        temp.height = getMaxHeight(temp);
+//        return temp;
+//    }
 
     private int getMaxHeight(AVLNode node) {
         int rightHeight = -1;
@@ -223,9 +182,14 @@ public class AVLTree<K extends Comparable<? super K>, V> extends BinarySearchTre
         if (key == null || value == null) {
             throw new IllegalArgumentException();
         }
-        if (root == null) {
-
+        // does this key exist?
+        if (find(key) != null) {
+            AVLNode result = (AVLNode) find(key, null);
+            V oldValue = result.value;
+            result.value = value;
+            return oldValue;
         }
+
         AVLNode current = (AVLNode) find(key, value);
         V oldValue = current.value;
         current.value = value;
