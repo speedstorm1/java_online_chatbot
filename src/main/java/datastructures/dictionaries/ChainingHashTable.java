@@ -47,11 +47,14 @@ public class ChainingHashTable<K, V> extends DeletelessDictionary<K, V> {
             rehash();
             size = prevSize;
         }
-        int hashcode = key.hashCode();
-        if (values[hashcode % capacity] == null) {
-            values[hashcode % capacity] = newChain.get();
+        int hashcode = key.hashCode() % capacity;
+        if (hashcode < 0) {
+            hashcode += capacity;
         }
-        values[hashcode % capacity].insert(key, value);
+        if (values[hashcode] == null) {
+            values[hashcode] = newChain.get();
+        }
+        values[hashcode].insert(key, value);
         if (oldValue == null) {
             size++;
         }
@@ -68,6 +71,9 @@ public class ChainingHashTable<K, V> extends DeletelessDictionary<K, V> {
         }
         int hashcode = key.hashCode();
         hashcode = hashcode % capacity;
+        if (hashcode < 0) {
+            hashcode += capacity;
+        }
         if (values[hashcode] == null) {
             return null;
         }
@@ -85,10 +91,14 @@ public class ChainingHashTable<K, V> extends DeletelessDictionary<K, V> {
                 Iterator itr = dict.iterator();
                 while (itr.hasNext()) {
                     Item<K, V> item = (Item<K, V>) itr.next();
-                    if (newValues[item.key.hashCode() % capacity] == null) {
-                        newValues[item.key.hashCode() % capacity] = newChain.get();
+                    int hashcode = item.key.hashCode() % capacity;
+                    if (hashcode < 0) {
+                        hashcode += capacity;
                     }
-                    newValues[item.key.hashCode() % capacity].insert(item.key, item.value);
+                    if (newValues[hashcode] == null) {
+                        newValues[hashcode] = newChain.get();
+                    }
+                    newValues[hashcode].insert(item.key, item.value);
                 }
             }
         }
