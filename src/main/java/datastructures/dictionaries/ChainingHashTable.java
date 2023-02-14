@@ -43,14 +43,16 @@ public class ChainingHashTable<K, V> extends DeletelessDictionary<K, V> {
             throw new IllegalArgumentException();
         }
         if (size >= capacity) {
+            int prevSize = size;
             rehash();
+            size = prevSize;
         }
         int hashcode = key.hashCode();
         if (values[hashcode % capacity] == null) {
             values[hashcode % capacity] = newChain.get();
         }
         values[hashcode % capacity].insert(key, value);
-        if (value != oldValue) {
+        if (oldValue == null) {
             size++;
         }
         return oldValue;
@@ -133,9 +135,14 @@ public class ChainingHashTable<K, V> extends DeletelessDictionary<K, V> {
         Dictionary<K, V> currentDictionary;
 
         public CHTIterator() {
+             dictionaryIndex = 0;
+//             index = 0;
             currentDictionary = values[dictionaryIndex];
             while (currentDictionary == null) {
                 dictionaryIndex++;
+                if (dictionaryIndex == values.length) {
+                    break;
+                }
                 currentDictionary = values[dictionaryIndex];
             }
             pairIterator = currentDictionary.iterator();
@@ -143,30 +150,55 @@ public class ChainingHashTable<K, V> extends DeletelessDictionary<K, V> {
 
         @Override
         public Item<K, V> next() {
-            if (index > size) {
+            if (!this.hasNext()) {
                 throw new NoSuchElementException();
             }
             index++;
             if (pairIterator.hasNext()) {
-                return pairIterator.next();
+                Item<K, V> returnVal = pairIterator.next();
+                if (pairIterator.hasNext()) {
+                    return returnVal;
+                }
+                // now, we have exhausted our current dictionary and want to set up a start for a new dictionary
+                dictionaryIndex++;
+                if (dictionaryIndex >= values.length) { // if you are at the end
+                    return returnVal;
+                }
+                currentDictionary = values[dictionaryIndex];
+                if (currentDictionary != null) { // next dictionary was not null
+                    pairIterator = currentDictionary.iterator();
+                    return returnVal;
+                }
+                while (currentDictionary == null && this.dictionaryIndex < values.length - 1) {
+                    dictionaryIndex++;
+                    currentDictionary = values[dictionaryIndex];
+                }
+                if (currentDictionary != null) {
+                    pairIterator = currentDictionary.iterator();
+                }
+                return returnVal;
             }
+            System.out.println("Size: " + size + " Index: " + index + " DI: " + dictionaryIndex + " " + capacity);
+
             dictionaryIndex++;
             currentDictionary = values[dictionaryIndex];
             while (currentDictionary == null) {
                 dictionaryIndex++;
-                if (dictionaryIndex >= capacity) {
-                    System.out.println("error reacher");
-                    System.out.println("Size: " + size + " Index: " + index + " DI: " + dictionaryIndex);
-                }
+//                if (dictionaryIndex >= capacity) {
+//                    System.out.println("error reached");
+//                    System.out.println("Size: " + size + " Index: " + index + " DI: " + dictionaryIndex);
+//                }
                 currentDictionary = values[dictionaryIndex];
             }
+//            currentDictionary = values[dictionaryIndex];
+
             pairIterator = currentDictionary.iterator();
             return pairIterator.next();
         }
 
         @Override
         public boolean hasNext() {
-            return (index < size);
+            return (this.index < size && this.dictionaryIndex+1 < capacity);
         }
     }
 
