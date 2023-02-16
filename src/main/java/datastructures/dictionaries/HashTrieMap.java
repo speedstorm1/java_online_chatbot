@@ -2,8 +2,10 @@ package datastructures.dictionaries;
 
 import cse332.exceptions.NotYetImplementedException;
 import cse332.interfaces.trie.TrieMap;
+import cse332.types.AlphabeticString;
 import cse332.types.BString;
 
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -15,13 +17,13 @@ import java.util.Map.Entry;
  * for method specifications.
  */
 public class HashTrieMap<A extends Comparable<A>, K extends BString<A>, V> extends TrieMap<A, K, V> {
-    public class HashTrieNode extends TrieNode<Map<A, HashTrieNode>, HashTrieNode> {
+    public class HashTrieNode extends TrieNode<ChainingHashTable<A, HashTrieNode>, HashTrieNode> {
         public HashTrieNode() {
             this(null);
         }
 
         public HashTrieNode(V value) {
-            this.pointers = new HashMap<A, HashTrieNode>();
+            this.pointers = new ChainingHashTable<>(AVLTree<A, HashTrieNode>::new);
             this.value = value;
         }
 
