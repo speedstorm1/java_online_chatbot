@@ -78,7 +78,7 @@ public class NGramToNextChoicesMap {
         } else {
             TopKSort.sort(afterNGrams,k,comp);
             // You must fix this line toward the end of the project
-            throw new NotYetImplementedException();
+       //     throw new NotYetImplementedException();
         }
 
         String[] nextWords = new String[k < 0 ? afterNGrams.length : k];
