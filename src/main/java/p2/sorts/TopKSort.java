@@ -16,8 +16,6 @@ public class TopKSort {
     public static <E> void sort(E[] array, int k, Comparator<E> comparator) {
         if (k <= array.length) {
             MinFourHeap sortHeap = new MinFourHeap(comparator);
-            System.out.println(sortHeap.size());
-            System.out.println(k);
             for (E value : array) {
                 sortHeap.add(value);
                 if (sortHeap.size() > k) {
