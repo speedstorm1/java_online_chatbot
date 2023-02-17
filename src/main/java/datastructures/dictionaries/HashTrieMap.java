@@ -1,6 +1,8 @@
 package datastructures.dictionaries;
 
+import cse332.datastructures.containers.Item;
 import cse332.exceptions.NotYetImplementedException;
+import cse332.interfaces.misc.SimpleIterator;
 import cse332.interfaces.trie.TrieMap;
 import cse332.types.AlphabeticString;
 import cse332.types.BString;
@@ -29,7 +31,25 @@ public class HashTrieMap<A extends Comparable<A>, K extends BString<A>, V> exten
 
         @Override
         public Iterator<Entry<A, HashTrieMap<A, K, V>.HashTrieNode>> iterator() {
-            return pointers.entrySet().iterator();
+            return new HTNIterator();
+        }
+
+        private class HTNIterator extends SimpleIterator<Entry<A, HashTrieMap<A, K, V>.HashTrieNode>> {
+            Iterator<Item<A, HashTrieNode>> CHTIterator;
+
+            public HTNIterator() {
+                CHTIterator = pointers.iterator();
+            }
+
+            public Entry<A, HashTrieNode> next() {
+                Item<A, HashTrieNode> nextItem = CHTIterator.next();
+                return new AbstractMap.SimpleEntry<>(nextItem.key, nextItem.value);
+            }
+
+            public boolean hasNext() {
+                return CHTIterator.hasNext();
+            }
+
         }
     }
 
@@ -46,10 +66,10 @@ public class HashTrieMap<A extends Comparable<A>, K extends BString<A>, V> exten
         HashTrieNode current = (HashTrieNode) root;
         V oldVal = find(key);
         for (A letter : key) {
-            if (!current.pointers.containsKey(letter)) { // add to trie
-                current.pointers.put(letter, new HashTrieNode());
+            if (current.pointers.find(letter) == null) { // add to trie
+                current.pointers.insert(letter, new HashTrieNode()); // may cause an issue cause find inserts?
             }
-            current = current.pointers.get(letter);
+            current = current.pointers.find(letter); // update this
         }
         if (oldVal == null) {
             size++;
@@ -81,8 +101,8 @@ public class HashTrieMap<A extends Comparable<A>, K extends BString<A>, V> exten
     private TrieNode find(K key, TrieNode root) {
         HashTrieNode current = (HashTrieNode) root;
         for (A letter : key) { // iterates through each letter in our key
-            if (current.pointers.containsKey(letter)) {
-                current = current.pointers.get(letter);
+            if (current.pointers.find(letter) != null) {
+                current = current.pointers.find(letter);
             } else { // map doesn't contain this key
                 return null;
             }
@@ -104,48 +124,11 @@ public class HashTrieMap<A extends Comparable<A>, K extends BString<A>, V> exten
 
     @Override
     public void delete(K key) {
-        if (key == null) {
-            throw new IllegalArgumentException();
-        }
-        HashTrieNode node = (HashTrieNode) find(key, root);
-        // case: mapping does not exist
-        if (node == null) {
-            return;
-        }
-        // case: other nodes are dependent on this
-        if (node.pointers.keySet().size() > 0) {
-            if (node.value != null) {
-                size--;
-            }
-            node.value = null;
-            return;
-        }
-
-        HashTrieNode lowestInUse = (HashTrieNode) root;
-        HashTrieNode current = (HashTrieNode) root;
-        A lowestChar = null;
-        for (A letter : key) {
-            if (current.value != null || current.pointers.keySet().size() > 1) {
-                lowestInUse = current;
-                lowestChar = letter;
-            }
-            if (current.pointers.get(letter) == node) {
-                break;
-            }
-            current = current.pointers.get(letter);
-        }
-        size--;
-        if (lowestChar == null) {
-            clear();
-        } else {
-            lowestInUse.pointers.remove(lowestChar);
-        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void clear() {
-        ((HashTrieNode)root).pointers.clear();
-        ((HashTrieNode)root).value = null;
-        size = 0;
+        throw new UnsupportedOperationException();
     }
 }
