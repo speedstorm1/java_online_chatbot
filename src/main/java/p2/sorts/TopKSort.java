@@ -14,6 +14,7 @@ public class TopKSort {
      * Behaviour is undefined when k > array.length
      */
     public static <E> void sort(E[] array, int k, Comparator<E> comparator) {
+        k = Math.min(k, array.length);
         if (k <= array.length) {
             MinFourHeap sortHeap = new MinFourHeap(comparator);
             for (E value : array) {
