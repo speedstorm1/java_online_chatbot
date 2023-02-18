@@ -33,7 +33,16 @@ public class ChainingHashTable<K, V> extends DeletelessDictionary<K, V> {
     private Dictionary<K, V>[] values;
     public ChainingHashTable(Supplier<Dictionary<K, V>> newChain) {
         this.newChain = newChain;
+        capacity = 19;
         values = new Dictionary[19];
+    }
+
+    public int getKeyHashCode(K key) {
+        int hashcode = key.hashCode() % capacity;
+        if (hashcode < 0) {
+            hashcode += capacity;
+        }
+        return hashcode;
     }
 
     @Override
@@ -47,10 +56,7 @@ public class ChainingHashTable<K, V> extends DeletelessDictionary<K, V> {
             rehash();
             size = prevSize;
         }
-        int hashcode = key.hashCode() % capacity;
-        if (hashcode < 0) {
-            hashcode += capacity;
-        }
+        int hashcode = getKeyHashCode(key);
         if (values[hashcode] == null) {
             values[hashcode] = newChain.get();
         }
@@ -69,11 +75,7 @@ public class ChainingHashTable<K, V> extends DeletelessDictionary<K, V> {
         if (capacity == 0) { // just built table
             capacity = primes[0];
         }
-        int hashcode = key.hashCode();
-        hashcode = hashcode % capacity;
-        if (hashcode < 0) {
-            hashcode += capacity;
-        }
+        int hashcode = getKeyHashCode(key);
         if (values[hashcode] == null) {
             return null;
         }
@@ -91,10 +93,7 @@ public class ChainingHashTable<K, V> extends DeletelessDictionary<K, V> {
                 Iterator itr = dict.iterator();
                 while (itr.hasNext()) {
                     Item<K, V> item = (Item<K, V>) itr.next();
-                    int hashcode = item.key.hashCode() % capacity;
-                    if (hashcode < 0) {
-                        hashcode += capacity;
-                    }
+                    int hashcode = getKeyHashCode(item.key);
                     if (newValues[hashcode] == null) {
                         newValues[hashcode] = newChain.get();
                     }
@@ -139,91 +138,37 @@ public class ChainingHashTable<K, V> extends DeletelessDictionary<K, V> {
     }
 
     private class CHTIterator extends SimpleIterator<Item<K, V>> {
-        int index;
-        Iterator <Item<K, V>> pairIterator;
-        int dictionaryIndex;
-        Dictionary<K, V> currentDictionary;
+        private int counter;
+        private Iterator<Item<K,V>>[] dictionaryIterators;
+        private int currentDictionaryIndex;
 
         public CHTIterator() {
-             dictionaryIndex = 0;
-//             index = 0;
-            currentDictionary = values[dictionaryIndex];
-            while (currentDictionary == null) {
-                dictionaryIndex++;
-                if (dictionaryIndex == values.length) {
-                    break;
+            currentDictionaryIndex = 0;
+            dictionaryIterators = new Iterator[values.length];
+            for (int i = 0; i < values.length; i++) {
+                Dictionary<K, V> currentDictionary = values[i];
+                if (currentDictionary != null) {
+                    dictionaryIterators[i] = currentDictionary.iterator();
                 }
-                currentDictionary = values[dictionaryIndex];
             }
-            pairIterator = currentDictionary.iterator();
         }
 
         @Override
         public Item<K, V> next() {
-            if (!this.hasNext()) {
+            if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            index++;
-            if (pairIterator.hasNext()) {
-                Item<K, V> returnVal = pairIterator.next();
-                if (pairIterator.hasNext()) {
-                    return returnVal;
-                }
-                // now, we have exhausted our current dictionary and want to set up a start for a new dictionary
-                dictionaryIndex++;
-                if (dictionaryIndex >= values.length) { // if you are at the end
-                    return returnVal;
-                }
-                currentDictionary = values[dictionaryIndex];
-                if (currentDictionary != null) { // next dictionary was not null
-                    pairIterator = currentDictionary.iterator();
-                    return returnVal;
-                }
-                while (currentDictionary == null && this.dictionaryIndex < values.length - 1) {
-                    dictionaryIndex++;
-                    currentDictionary = values[dictionaryIndex];
-                }
-                if (currentDictionary != null) {
-                    pairIterator = currentDictionary.iterator();
-                }
-                return returnVal;
+            counter++;
+            while (values[currentDictionaryIndex] == null || !dictionaryIterators[currentDictionaryIndex].hasNext()) {
+                currentDictionaryIndex++;
             }
-            System.out.println("Size: " + size + " Index: " + index + " DI: " + dictionaryIndex + " " + capacity);
-
-            dictionaryIndex++;
-            currentDictionary = values[dictionaryIndex];
-            while (currentDictionary == null) {
-                dictionaryIndex++;
-//                if (dictionaryIndex >= capacity) {
-//                    System.out.println("error reached");
-//                    System.out.println("Size: " + size + " Index: " + index + " DI: " + dictionaryIndex);
-//                }
-                currentDictionary = values[dictionaryIndex];
-            }
-//            currentDictionary = values[dictionaryIndex];
-
-            pairIterator = currentDictionary.iterator();
-            return pairIterator.next();
+            return dictionaryIterators[currentDictionaryIndex].next();
         }
 
         @Override
         public boolean hasNext() {
-            return (this.index < size && this.dictionaryIndex+1 < capacity);
+            return counter < size;
         }
     }
-
-//    private class ListNode<K, V> {
-//        public int hashcode;
-//
-//        public Dictionary<K, V> value;
-//        public ListNode next;
-//
-//        public ListNode(Dictionary<K, V> value, ListNode next, int hashcode) {
-//            this.hashcode = hashcode;
-//            this.value = value;
-//            this.next = next;
-//        }
-//    }
-
 
 }
