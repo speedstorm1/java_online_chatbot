@@ -78,7 +78,6 @@ public class CircularArrayFIFOQueue<E extends Comparable<E>> extends FixedSizeFI
 
     @Override
     public int compareTo(FixedSizeFIFOWorkList<E> other) {
-        // You will implement this method in project 2. Leave this method unchanged for project 1.
         int index = 0;
         while (index < this.size && index < other.size()) {
             if (this.peek(index).compareTo(other.peek(index)) != 0) {
@@ -95,13 +94,11 @@ public class CircularArrayFIFOQueue<E extends Comparable<E>> extends FixedSizeFI
     @Override
     @SuppressWarnings("unchecked")
     public boolean equals(Object obj) {
-        // You will finish implementing this method in project 2. Leave this method unchanged for project 1.
         if (this == obj) {
             return true;
         } else if (!(obj instanceof FixedSizeFIFOWorkList<?>)) {
             return false;
         } else {
-            // Uncomment the line below for p2 when you implement equals
             FixedSizeFIFOWorkList<E> other = (FixedSizeFIFOWorkList<E>) obj;
             if (this.size != other.size()) {
                 return false;
@@ -118,11 +115,10 @@ public class CircularArrayFIFOQueue<E extends Comparable<E>> extends FixedSizeFI
 
     @Override
     public int hashCode() {
-        // You will implement this method in project 2. Leave this method unchanged for project 1.
         if (size == 0) {
             return 0;
         }
-        int result = 0; // or should I do size?
+        int result = 0;
         for (int i = 0; i < size; i++) {
             result = 31 * result + values[i].hashCode();
         }

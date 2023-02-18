@@ -23,11 +23,6 @@ public class MinFourHeap<E> extends PriorityWorkList<E> {
         comparator = c;
     }
 
-//    @Override
-//    public boolean hasWork() {
-//        throw new NotYetImplementedException();
-//    }
-
     @Override
     public void add(E work) {
         if (size == capacity) {

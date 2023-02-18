@@ -91,15 +91,11 @@ public class MoveToFrontList<K, V> extends DeletelessDictionary<K, V> {
         return new FLIterator();
     }
 
-
-
-
     private class FLIterator extends SimpleIterator<Item<K, V>> {
         private MoveToFrontList.ListNode current;
+
         public FLIterator() {
-        //    if (root != null) {
-                this.current = root;
-          //  }
+            this.current = root;
         }
 
         @Override
@@ -129,33 +125,3 @@ public class MoveToFrontList<K, V> extends DeletelessDictionary<K, V> {
         }
     }
 }
-
-/*
-*  private class FLIterator extends SimpleIterator<Item<K, V>> {
-        private final WorkList<MoveToFrontList.ListNode> nodes;
-        private MoveToFrontList.ListNode current;
-
-        public FLIterator() {
-            if (root != null) {
-                this.current = root;
-            }
-            this.nodes = new ArrayStack<>();
-        }
-
-        @Override
-        public boolean hasNext() {
-            return this.current != null || this.nodes.hasWork();
-        }
-
-        @Override
-        public Item<K, V> next() {
-            while (this.current != null) {
-                this.nodes.add(current);
-                this.current = current.next;
-            }
-            current = nodes.next();
-            Item<K, V> value = new Item(current.key, current.data);
-            return value;
-        }
-    }
-* */

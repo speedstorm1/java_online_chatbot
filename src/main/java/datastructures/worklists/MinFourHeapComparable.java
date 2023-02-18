@@ -20,11 +20,6 @@ public class MinFourHeapComparable<E extends Comparable<E>> extends PriorityWork
         data = (E[])new Comparable[capacity];
     }
 
-//    @Override
-//    public boolean hasWork() {
-//        throw new NotYetImplementedException();
-//    }
-
     @Override
     public void add(E work) {
         if (size == capacity) {

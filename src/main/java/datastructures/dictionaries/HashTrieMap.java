@@ -49,7 +49,6 @@ public class HashTrieMap<A extends Comparable<A>, K extends BString<A>, V> exten
             public boolean hasNext() {
                 return CHTIterator.hasNext();
             }
-
         }
     }
 
@@ -67,9 +66,9 @@ public class HashTrieMap<A extends Comparable<A>, K extends BString<A>, V> exten
         V oldVal = find(key);
         for (A letter : key) {
             if (current.pointers.find(letter) == null) { // add to trie
-                current.pointers.insert(letter, new HashTrieNode()); // may cause an issue cause find inserts?
+                current.pointers.insert(letter, new HashTrieNode());
             }
-            current = current.pointers.find(letter); // update this
+            current = current.pointers.find(letter);
         }
         if (oldVal == null) {
             size++;
