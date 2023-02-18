@@ -81,8 +81,8 @@ public class NGramToNextChoicesMap {
             // Reverse Values
             for (int i = 0; i < newK/2; i++) {
                 Item<String, Integer> temp = afterNGrams[i];
-                afterNGrams[i] = afterNGrams[k - i - 1];
-                afterNGrams[k - i - 1] = temp;
+                afterNGrams[i] = afterNGrams[newK - i - 1];
+                afterNGrams[newK - i - 1] = temp;
             }
         }
 
