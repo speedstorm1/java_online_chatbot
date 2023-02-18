@@ -27,7 +27,7 @@ public class AutocompleteTrie extends HashTrieMap<Character, AlphabeticString, I
             if (current.value != null) {
                 return null;
             }
-            result.append(current.pointers.iterator().next());
+            result.append(current.pointers.iterator().next().key);
             current = current.pointers.iterator().next().value;
         }
 
