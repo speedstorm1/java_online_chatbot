@@ -77,6 +77,13 @@ public class NGramToNextChoicesMap {
             InsertionSort.sort(afterNGrams, comp);
         } else {
             TopKSort.sort(afterNGrams,k, (a, b) -> -comp.compare(a, b));
+            int newK = Math.min(k, afterNGrams.length);
+            // Reverse Values
+            for (int i = 0; i < newK/2; i++) {
+                Item<String, Integer> temp = afterNGrams[i];
+                afterNGrams[i] = afterNGrams[k - i - 1];
+                afterNGrams[k - i - 1] = temp;
+            }
         }
 
         String[] nextWords = new String[k < 0 ? afterNGrams.length : k];
