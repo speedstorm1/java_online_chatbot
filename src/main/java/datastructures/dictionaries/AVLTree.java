@@ -103,7 +103,7 @@ public class AVLTree<K extends Comparable<? super K>, V> extends BinarySearchTre
         currentRoot.children[1] = newRoot.children[0];
         newRoot.children[0] = currentRoot;
         currentRoot.height = Math.max(height(currentRoot.getLeft()), height(currentRoot.getRight())) + 1;
-        newRoot.height = Math.max(newRoot.getRight().height, currentRoot.height) + 1;
+        newRoot.height = Math.max(height(newRoot.getRight()), height(currentRoot)) + 1;
         return newRoot;
     }
 
